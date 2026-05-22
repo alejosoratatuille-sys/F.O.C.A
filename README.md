@@ -5,3 +5,4 @@ Alejandro Cordova: programador
 Diego Laya: programador
 Emilia Cartagena: marketing
 Isaac Esis: oratoria
+
