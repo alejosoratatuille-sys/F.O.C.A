@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZumoGo - Bar Zumo&Resto</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app" class="app-container">
+        <!-- SPLASH SCREEN - LOGO -->
+        <div id="splash" class="splash-screen">
+            <canvas id="logoCanvas" width="300" height="300"></canvas>
+            <p class="splash-text">Cargando ZumoGo...</p>
+        </div>
+
+        <!-- CAPA 1: REGISTRO/LOGIN -->
+        <div id="authLayer" class="layer hidden">
+            <div class="auth-container">
+                <img id="logoApp" class="logo-app" src="" alt="ZumoGo Logo">
+                
+                <!-- SIGN IN -->
+                <div id="signInForm" class="form-container">
+                    <h2>Crear Cuenta</h2>
+                    <input type="text" id="signInNames" placeholder="NOMBRES Y APELLIDOS" class="input-field" maxlength="100">
+                    <input type="email" id="signInEmail" placeholder="correo" class="input-field email-input" maxlength="50">
+                    <span class="email-domain">@eightacademy.edu.ec</span>
+                    <input type="password" id="signInPassword" placeholder="Contraseña (mín 12 dígitos)" class="input-field">
+                    <div class="password-requirements">
+                        <p>✓ Mínimo 12 caracteres</p>
+                        <p>✓ Mayúscula, minúscula, número y símbolo</p>
+                    </div>
+                    <button id="signUpBtn" class="btn btn-primary">Registrarse</button>
+                    <p class="toggle-form">¿Ya tienes cuenta? <a href="#" id="toLoginLink">Inicia Sesión</a></p>
+                </div>
+
+                <!-- LOG IN -->
+                <div id="logInForm" class="form-container hidden">
+                    <h2>Inicia Sesión</h2>
+                    <input type="email" id="logInEmail" placeholder="correo" class="input-field email-input" maxlength="50">
+                    <span class="email-domain">@eightacademy.edu.ec</span>
+                    <input type="password" id="logInPassword" placeholder="Contraseña" class="input-field">
+                    <button id="loginBtn" class="btn btn-primary">Ingresar</button>
+                    <p class="toggle-form">¿No tienes cuenta? <a href="#" id="toSignupLink">Regístrate</a></p>
+                </div>
+
+                <div id="authMessage" class="message hidden"></div>
+            </div>
+        </div>
+
+        <!-- CAPA 2: PEDIR -->
+        <div id="orderLayer" class="layer hidden">
+            <div class="order-container">
+                <div class="header">
+                    <h1>ZumoGo</h1>
+                    <p id="welcomeMsg" class="welcome">Hola Usuario</p>
+                    <button id="logoutBtn" class="btn btn-logout">Salir</button>
+                </div>
+
+                <!-- SELECTOR DE RECREO -->
+                <div class="recreo-selector">
+                    <label>Selecciona tu recreo:</label>
+                    <div class="recreo-options">
+                        <button id="recreoBasica" class="btn btn-recreo active">Recreo Básica (9:50-10:30)</button>
+                        <button id="recreoBachillerato" class="btn btn-recreo">Recreo Bachillerato (10:30-11:00)</button>
+                    </div>
+                </div>
+
+                <!-- MENÚ -->
+                <div class="menu-section">
+                    <h3>Menú Disponible</h3>
+                    <div id="menuContainer" class="menu-grid"></div>
+                </div>
+
+                <!-- CARRITO -->
+                <div class="cart-section">
+                    <h3>Carrito de Compra</h3>
+                    <div id="cartItems" class="cart-items"></div>
+                    <div class="cart-total">
+                        <strong>Total: $<span id="totalPrice">0.00</span></strong>
+                    </div>
+                    <button id="proceedPaymentBtn" class="btn btn-primary" disabled>Proceder a Pago</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CAPA 3: PAGAR -->
+        <div id="paymentLayer" class="layer hidden">
+            <div class="payment-container">
+                <h2>Confirmar Pago</h2>
+                <div id="paymentSummary" class="payment-summary"></div>
+                
+                <div class="payment-methods">
+                    <h3>Método de Pago</h3>
+                    <button id="paymentPayMon" class="btn btn-method active">
+                        <span class="method-icon">💳</span>
+                        PayMon
+                    </button>
+                    <button id="paymentEightCoins" class="btn btn-method">
+                        <span class="method-icon">🪙</span>
+                        EightCoins
+                    </button>
+                </div>
+
+                <div id="paymentDetails" class="payment-details">
+                    <div id="paymonDetails" class="method-details">
+                        <p>Procesando pago por PayMon...</p>
+                        <p class="payment-info">El monto se cobrará de tu cuenta PayMon</p>
+                    </div>
+                    <div id="eightcoinsDetails" class="method-details hidden">
+                        <p>Procesando pago con EightCoins...</p>
+                        <p class="payment-info">Se descontarán de tu saldo disponible</p>
+                    </div>
+                </div>
+
+                <div class="payment-actions">
+                    <button id="confirmPaymentBtn" class="btn btn-primary">Confirmar Pago</button>
+                    <button id="cancelPaymentBtn" class="btn btn-secondary">Cancelar</button>
+                </div>
+                <div id="paymentMessage" class="message hidden"></div>
+            </div>
+        </div>
+
+        <!-- CAPA 4: RETIRAR -->
+        <div id="pickupLayer" class="layer hidden">
+            <div class="pickup-container">
+                <h2>Tu Pedido Está Listo</h2>
+                <div class="pickup-info">
+                    <p>Por favor presenta este código al retirar:</p>
+                    <div id="pickupCode" class="pickup-code"></div>
+                    <div id="qrCode" class="qr-code"></div>
+                    <p class="pickup-notice">Dirígete al bar Zumo&Resto en tu hora de recreo</p>
+                </div>
+                <button id="newOrderBtn" class="btn btn-primary">Hacer Otro Pedido</button>
+                <button id="homeBtn" class="btn btn-secondary">Ir al Inicio</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="logo-generator.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
