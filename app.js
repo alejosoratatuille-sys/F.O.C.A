@@ -19,30 +19,30 @@ const app = {
         }
     ],
     
-    // Menú disponible
+    // Menú disponible con imágenes (emojis)
     menu: [
         // Comidas
-        { id: 1, name: 'Salchipapas', price: 3.50, stock: 30, category: 'comida' },
-        { id: 2, name: 'Arepas', price: 2.50, stock: 30, category: 'comida' },
-        { id: 3, name: 'Sandwich', price: 3.00, stock: 30, category: 'comida' },
-        { id: 4, name: 'Pan de Chocolate', price: 1.50, stock: 30, category: 'comida' },
-        { id: 5, name: 'Donas', price: 1.00, stock: 30, category: 'comida' },
-        { id: 6, name: 'Ensalada de Frutas', price: 4.00, stock: 30, category: 'comida' },
-        { id: 7, name: 'Pizza', price: 5.00, stock: 30, category: 'comida' },
-        { id: 8, name: 'Nachos con Queso', price: 4.50, stock: 30, category: 'comida' },
-        { id: 9, name: 'Dorilocos', price: 3.00, stock: 30, category: 'comida' },
+        { id: 1, name: 'Salchipapas', price: 3.50, stock: 30, category: 'comida', image: '🍟' },
+        { id: 2, name: 'Arepas', price: 2.50, stock: 30, category: 'comida', image: '🥘' },
+        { id: 3, name: 'Sandwich', price: 3.00, stock: 30, category: 'comida', image: '🥪' },
+        { id: 4, name: 'Pan de Chocolate', price: 1.50, stock: 30, category: 'comida', image: '🍫' },
+        { id: 5, name: 'Donas', price: 1.00, stock: 30, category: 'comida', image: '🍩' },
+        { id: 6, name: 'Ensalada de Frutas', price: 4.00, stock: 30, category: 'comida', image: '🍎' },
+        { id: 7, name: 'Pizza', price: 5.00, stock: 30, category: 'comida', image: '🍕' },
+        { id: 8, name: 'Nachos con Queso', price: 4.50, stock: 30, category: 'comida', image: '🧀' },
+        { id: 9, name: 'Dorilocos', price: 3.00, stock: 30, category: 'comida', image: '🌮' },
         
         // Bebidas
-        { id: 10, name: 'Bubble Tea', price: 4.00, stock: 30, category: 'bebida' },
-        { id: 11, name: 'Frozen de Frutas', price: 3.50, stock: 30, category: 'bebida' },
-        { id: 12, name: 'Agua', price: 1.00, stock: 30, category: 'bebida' },
-        { id: 13, name: 'Powerade', price: 2.00, stock: 30, category: 'bebida' },
-        { id: 14, name: 'Leche de Sabores', price: 2.50, stock: 30, category: 'bebida' },
-        { id: 15, name: 'Ponymalta', price: 2.00, stock: 30, category: 'bebida' },
-        { id: 16, name: 'Imperial Natura', price: 1.50, stock: 30, category: 'bebida' },
-        { id: 17, name: 'Snack de Papas', price: 1.00, stock: 30, category: 'bebida' },
-        { id: 18, name: 'Snack Chifles Sal', price: 0.75, stock: 30, category: 'bebida' },
-        { id: 19, name: 'Snack Chifles Dulce', price: 0.75, stock: 30, category: 'bebida' }
+        { id: 10, name: 'Bubble Tea', price: 4.00, stock: 30, category: 'bebida', image: '🧋' },
+        { id: 11, name: 'Frozen de Frutas', price: 3.50, stock: 30, category: 'bebida', image: '🧊' },
+        { id: 12, name: 'Agua', price: 1.00, stock: 30, category: 'bebida', image: '💧' },
+        { id: 13, name: 'Powerade', price: 2.00, stock: 30, category: 'bebida', image: '🥤' },
+        { id: 14, name: 'Leche de Sabores', price: 2.50, stock: 30, category: 'bebida', image: '🥛' },
+        { id: 15, name: 'Ponymalta', price: 2.00, stock: 30, category: 'bebida', image: '🍼' },
+        { id: 16, name: 'Imperial Natura', price: 1.50, stock: 30, category: 'bebida', image: '🥑' },
+        { id: 17, name: 'Snack de Papas', price: 1.00, stock: 30, category: 'bebida', image: '🥔' },
+        { id: 18, name: 'Snack Chifles Sal', price: 0.75, stock: 30, category: 'bebida', image: '🍘' },
+        { id: 19, name: 'Snack Chifles Dulce', price: 0.75, stock: 30, category: 'bebida', image: '🍡' }
     ]
 };
 
@@ -218,12 +218,13 @@ function renderMenu() {
         const div = document.createElement('div');
         div.className = 'menu-item';
         div.innerHTML = `
+            <div class="item-image">${item.image}</div>
             <div class="item-name">${item.name}</div>
             <div class="item-price">\$${item.price.toFixed(2)}</div>
             <div class="item-stock">Stock: ${item.stock}</div>
-            <div class="item-quantity">
-                <input type="number" id="qty-${item.id}" value="0" min="0" max="${item.stock}">
-                <button onclick="addToCart(${item.id})">Agregar</button>
+            <div class="item-quantity-section">
+                <input type="number" id="qty-${item.id}" value="1" min="1" max="${item.stock}" class="qty-input">
+                <button class="btn-add-cart" onclick="addToCart(${item.id})">+</button>
             </div>
         `;
         container.appendChild(div);
@@ -232,25 +233,49 @@ function renderMenu() {
 
 function addToCart(itemId) {
     const qtyInput = document.getElementById(`qty-${itemId}`);
-    const quantity = parseInt(qtyInput.value) || 0;
-    
-    if (quantity <= 0) return;
-    
+    const quantity = parseInt(qtyInput.value) || 1;
     const item = app.menu.find(i => i.id === itemId);
+    
+    // Validación mejorada
+    if (!item) {
+        showNotification('Producto no encontrado', 'error');
+        return;
+    }
+    
+    if (quantity <= 0) {
+        showNotification('La cantidad debe ser mayor a 0', 'error');
+        return;
+    }
+    
+    if (quantity > item.stock) {
+        showNotification(`Stock disponible: ${item.stock}`, 'error');
+        return;
+    }
+    
+    // Agregar al carrito
     const existingCartItem = app.cart.find(c => c.id === itemId);
     
     if (existingCartItem) {
-        existingCartItem.quantity += quantity;
+        const newQuantity = existingCartItem.quantity + quantity;
+        if (newQuantity > item.stock) {
+            showNotification(`No hay suficiente stock. Máximo: ${item.stock}`, 'error');
+            return;
+        }
+        existingCartItem.quantity = newQuantity;
     } else {
         app.cart.push({ ...item, quantity });
     }
     
-    qtyInput.value = '0';
+    // Resetear input y mostrar confirmación
+    qtyInput.value = '1';
     updateCart();
+    showNotification(`${item.name} agregado al carrito ✓`, 'success');
 }
 
 function removeFromCart(itemId) {
+    const item = app.cart.find(c => c.id === itemId);
     app.cart = app.cart.filter(item => item.id !== itemId);
+    showNotification(`${item.name} removido del carrito`, 'info');
     updateCart();
 }
 
@@ -262,23 +287,66 @@ function updateCart() {
     cartContainer.innerHTML = '';
     let total = 0;
     
-    app.cart.forEach(item => {
-        const itemTotal = item.price * item.quantity;
-        total += itemTotal;
-        
-        const div = document.createElement('div');
-        div.className = 'cart-item';
-        div.innerHTML = `
-            <span class="cart-item-name">${item.name}</span>
-            <span class="cart-item-qty">x${item.quantity}</span>
-            <span class="cart-item-price">\$${itemTotal.toFixed(2)}</span>
-            <button class="cart-item-remove" onclick="removeFromCart(${item.id})">✕</button>
-        `;
-        cartContainer.appendChild(div);
-    });
+    if (app.cart.length === 0) {
+        cartContainer.innerHTML = '<p style="text-align: center; color: #6b7280;">Tu carrito está vacío</p>';
+    } else {
+        app.cart.forEach(item => {
+            const itemTotal = item.price * item.quantity;
+            total += itemTotal;
+            
+            const div = document.createElement('div');
+            div.className = 'cart-item';
+            div.innerHTML = `
+                <span class="cart-item-image">${item.image}</span>
+                <div class="cart-item-details">
+                    <span class="cart-item-name">${item.name}</span>
+                    <span class="cart-item-qty">x${item.quantity}</span>
+                </div>
+                <span class="cart-item-price">\$${itemTotal.toFixed(2)}</span>
+                <button class="cart-item-remove" onclick="removeFromCart(${item.id})" title="Eliminar">✕</button>
+            `;
+            cartContainer.appendChild(div);
+        });
+    }
     
     totalPrice.textContent = total.toFixed(2);
     proceedBtn.disabled = app.cart.length === 0;
+}
+
+// Notificación rápida
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        z-index: 10000;
+        animation: slideInRight 0.3s ease;
+    `;
+    
+    if (type === 'success') {
+        notification.style.background = '#22c55e';
+        notification.style.color = 'white';
+    } else if (type === 'error') {
+        notification.style.background = '#ef4444';
+        notification.style.color = 'white';
+    } else {
+        notification.style.background = '#3b82f6';
+        notification.style.color = 'white';
+    }
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 2000);
 }
 
 // Seleccionar recreo
@@ -314,7 +382,7 @@ function renderPaymentSummary() {
         const div = document.createElement('div');
         div.className = 'payment-summary-item';
         div.innerHTML = `
-            <span>${item.name} x${item.quantity}</span>
+            <span>${item.image} ${item.name} x${item.quantity}</span>
             <span>\$${itemTotal.toFixed(2)}</span>
         `;
         summaryDiv.appendChild(div);
