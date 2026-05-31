@@ -1,12 +1,21 @@
 // APLICACIÓN ZUMOGO
 // Sistema de pedidos, compra y retiro para Zumo&Resto
 
+// ===== LIBRERÍA QR (QRCode.js) =====
+// Incluida dinámicamente desde CDN
+if (!window.QRCode) {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    document.head.appendChild(script);
+}
+
 // ===== CONFIGURACIÓN INICIAL =====
 const app = {
     currentUser: null,
     selectedRecreation: 'basica',
     cart: [],
     paymentMethod: 'paymon',
+    currentOrderId: null,
     
     // Base de datos de usuarios
     users: JSON.parse(localStorage.getItem('zumogoUsers')) || [
@@ -23,9 +32,9 @@ const app = {
     menu: [
         // Comidas
         { id: 1, name: 'Salchipapas', price: 3.50, stock: 30, category: 'comida', image: '🍟' },
-        { id: 2, name: 'Arepas', price: 2.50, stock: 30, category: 'comida', image: '🥘' },
+        { id: 2, name: 'Arepas', price: 2.50, stock: 30, category: 'comida', image: '🥠' },
         { id: 3, name: 'Sandwich', price: 3.00, stock: 30, category: 'comida', image: '🥪' },
-        { id: 4, name: 'Pan de Chocolate', price: 1.50, stock: 30, category: 'comida', image: '🍫' },
+        { id: 4, name: 'Pan de Chocolate', price: 1.50, stock: 30, category: 'comida', image: '🍪' },
         { id: 5, name: 'Donas', price: 1.00, stock: 30, category: 'comida', image: '🍩' },
         { id: 6, name: 'Ensalada de Frutas', price: 4.00, stock: 30, category: 'comida', image: '🍎' },
         { id: 7, name: 'Pizza', price: 5.00, stock: 30, category: 'comida', image: '🍕' },
@@ -39,10 +48,10 @@ const app = {
         { id: 13, name: 'Powerade', price: 2.00, stock: 30, category: 'bebida', image: '🥤' },
         { id: 14, name: 'Leche de Sabores', price: 2.50, stock: 30, category: 'bebida', image: '🥛' },
         { id: 15, name: 'Ponymalta', price: 2.00, stock: 30, category: 'bebida', image: '🍼' },
-        { id: 16, name: 'Imperial Natura', price: 1.50, stock: 30, category: 'bebida', image: '🥑' },
+        { id: 16, name: 'Imperial Natura', price: 1.50, stock: 30, category: 'bebida', image: '🍹' },
         { id: 17, name: 'Snack de Papas', price: 1.00, stock: 30, category: 'bebida', image: '🥔' },
-        { id: 18, name: 'Snack Chifles Sal', price: 0.75, stock: 30, category: 'bebida', image: '🍘' },
-        { id: 19, name: 'Snack Chifles Dulce', price: 0.75, stock: 30, category: 'bebida', image: '🍡' }
+        { id: 18, name: 'Snack Chifles Sal', price: 0.75, stock: 30, category: 'bebida', image: '🌽' },
+        { id: 19, name: 'Snack Chifles Dulce', price: 0.75, stock: 30, category: 'bebida', image: '🌰' }
     ]
 };
 
@@ -64,6 +73,60 @@ function validatePassword(password) {
     // Mínimo 12 dígitos, mayúscula, minúscula, número y símbolo
     const regex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
     return regex.test(password);
+}
+
+// ===== GENERADOR DE ÓRDENES Y QR =====
+function generateOrderData() {
+    const orderId = 'ZGO' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    const timestamp = new Date().toISOString();
+    const recreation = app.selectedRecreation === 'basica' ? 'Básica (9:50-10:30)' : 'Bachillerato (10:30-11:00)';
+    
+    const orderData = {
+        id: orderId,
+        user: app.currentUser.names,
+        email: app.currentUser.email,
+        recreation: recreation,
+        timestamp: timestamp,
+        items: app.cart.map(item => `${item.name}(x${item.quantity})`).join(', '),
+        total: app.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    };
+    
+    // Guardar orden en localStorage
+    const orders = JSON.parse(localStorage.getItem('zumogoOrders')) || [];
+    orders.push(orderData);
+    localStorage.setItem('zumogoOrders', JSON.stringify(orders));
+    
+    app.currentOrderId = orderId;
+    return orderId;
+}
+
+function generateQRCode(orderId) {
+    // Limpiar QR anterior
+    const qrContainer = document.getElementById('qrCode');
+    qrContainer.innerHTML = '';
+    
+    // Datos del QR (incluye información completa)
+    const qrData = `Pedido: ${orderId}
+Estudiante: ${app.currentUser.names}
+Correo: ${app.currentUser.email}
+Recreo: ${app.selectedRecreation === 'basica' ? 'Básica' : 'Bachillerato'}
+Total: $${app.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}`;
+    
+    // Generar QR con QRCode.js
+    try {
+        new QRCode(qrContainer, {
+            text: qrData,
+            width: 200,
+            height: 200,
+            colorDark: '#22c55e',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    } catch (error) {
+        console.error('Error generando QR:', error);
+        // Fallback si hay error
+        qrContainer.innerHTML = `<div style="font-size: 48px;">📱</div><div style="font-size: 14px; margin-top: 10px; font-weight: 700;">${orderId}</div>`;
+    }
 }
 
 // ===== AUTENTICACIÓN =====
@@ -206,7 +269,8 @@ function goToPaymentLayer() {
 function goToPickupLayer() {
     hideAllLayers();
     document.getElementById('pickupLayer').classList.remove('hidden');
-    generatePickupCode();
+    const orderId = generateOrderData();
+    displayPickupInfo(orderId);
 }
 
 // ===== CAPA DE PEDIDO =====
@@ -433,22 +497,20 @@ document.getElementById('cancelPaymentBtn')?.addEventListener('click', () => {
 });
 
 // ===== CAPA DE RETIRO =====
-function generatePickupCode() {
-    // Generar código aleatorio
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const timestamp = new Date().toLocaleTimeString();
+function displayPickupInfo(orderId) {
+    // Mostrar ID de orden
+    document.getElementById('pickupCode').textContent = orderId;
     
-    document.getElementById('pickupCode').textContent = code;
-    
-    // Generar "QR" simulado (usando emoji + código)
-    const qrDiv = document.getElementById('qrCode');
-    qrDiv.innerHTML = `📱<br>${code}`;
-    qrDiv.style.fontSize = '20px';
+    // Generar QR
+    setTimeout(() => {
+        generateQRCode(orderId);
+    }, 100);
 }
 
 // Hacer otro pedido
 document.getElementById('newOrderBtn')?.addEventListener('click', () => {
     app.cart = [];
+    app.currentOrderId = null;
     goToOrderLayer();
 });
 
@@ -456,6 +518,7 @@ document.getElementById('newOrderBtn')?.addEventListener('click', () => {
 document.getElementById('homeBtn')?.addEventListener('click', () => {
     app.currentUser = null;
     app.cart = [];
+    app.currentOrderId = null;
     goToAuthLayer();
 });
 
