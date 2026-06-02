@@ -1,5 +1,6 @@
 // APLICACIÓN ZUMOGO
 // Sistema de pedidos, compra y retiro para Zumo&Resto
+// MÓDULO DE BACKEND - Gestión de Inventario y Pagos
 
 // ===== LIBRERÍA QR (QRCode.js) =====
 if (!window.QRCode) {
@@ -15,45 +16,158 @@ const app = {
     cart: [],
     paymentMethod: 'paymon',
     currentOrderId: null,
-    paymonBalance: 500.00, // Saldo simulado de PayMon
+    paymonBalance: 10.00, // Límite máximo $10 por usuario (simulado)
     
-    // Base de datos de usuarios
+    // Base de datos de usuarios CON SALDO PERSONALIZADO
     users: JSON.parse(localStorage.getItem('zumogoUsers')) || [
         {
             id: 1,
             names: 'MARÍA EMILIA CARTAGENA LINCANGO',
             email: 'mcartagena@eightacademy.edu.ec',
-            password: 'Zumo@2024', // Contraseña segura de ejemplo
-            paymonBalance: 500.00,
+            password: 'Zumo@2024',
+            paymonBalance: 10.00, // Máximo permitido
+            dailyLimit: 10.00,
             createdAt: new Date().toISOString()
         }
     ],
     
-    // Menú disponible con imágenes (emojis)
+    // Menú ACTUALIZADO CON PRECIOS NUEVOS
     menu: [
         // Comidas
-        { id: 1, name: 'Salchipapas', price: 3.50, stock: 30, category: 'comida', image: '🍟' },
-        { id: 2, name: 'Arepas', price: 2.50, stock: 30, category: 'comida', image: '🥠' },
-        { id: 3, name: 'Sandwich', price: 3.00, stock: 30, category: 'comida', image: '🥪' },
-        { id: 4, name: 'Pan de Chocolate', price: 1.50, stock: 30, category: 'comida', image: '🍪' },
-        { id: 5, name: 'Donas', price: 1.00, stock: 30, category: 'comida', image: '🍩' },
-        { id: 6, name: 'Ensalada de Frutas', price: 4.00, stock: 30, category: 'comida', image: '🍎' },
-        { id: 7, name: 'Pizza', price: 5.00, stock: 30, category: 'comida', image: '🍕' },
-        { id: 8, name: 'Nachos con Queso', price: 4.50, stock: 30, category: 'comida', image: '🧀' },
-        { id: 9, name: 'Dorilocos', price: 3.00, stock: 30, category: 'comida', image: '🌮' },
+        { id: 1, name: 'Salchipapas', price: 1.85, stock: 30, category: 'comida', image: '🍟' },
+        { id: 2, name: 'Arepas', price: 1.50, stock: 30, category: 'comida', image: '🥠' },
+        { id: 3, name: 'Sandwich', price: 1.25, stock: 30, category: 'comida', image: '🥪' },
+        { id: 4, name: 'Pan de Chocolate', price: 0.50, stock: 30, category: 'comida', image: '🍪' },
+        { id: 5, name: 'Donas', price: 0.80, stock: 30, category: 'comida', image: '🍩' },
+        { id: 6, name: 'Ensalada de Frutas', price: 1.25, stock: 30, category: 'comida', image: '🍎' },
+        { id: 7, name: 'Pizza', price: 1.75, stock: 30, category: 'comida', image: '🍕' },
+        { id: 8, name: 'Nachos con Queso', price: 2.25, stock: 30, category: 'comida', image: '🧀' },
+        { id: 9, name: 'Dorilocos', price: 2.60, stock: 30, category: 'comida', image: '🌮' },
         
         // Bebidas
-        { id: 10, name: 'Bubble Tea', price: 4.00, stock: 30, category: 'bebida', image: '🧋' },
-        { id: 11, name: 'Frozen de Frutas', price: 3.50, stock: 30, category: 'bebida', image: '🧊' },
-        { id: 12, name: 'Agua', price: 1.00, stock: 30, category: 'bebida', image: '💧' },
-        { id: 13, name: 'Powerade', price: 2.00, stock: 30, category: 'bebida', image: '🥤' },
-        { id: 14, name: 'Leche de Sabores', price: 2.50, stock: 30, category: 'bebida', image: '🥛' },
-        { id: 15, name: 'Ponymalta', price: 2.00, stock: 30, category: 'bebida', image: '🍼' },
-        { id: 16, name: 'Imperial Natura', price: 1.50, stock: 30, category: 'bebida', image: '🍹' },
-        { id: 17, name: 'Snack de Papas', price: 1.00, stock: 30, category: 'bebida', image: '🥔' },
-        { id: 18, name: 'Snack Chifles Sal', price: 0.75, stock: 30, category: 'bebida', image: '🌽' },
-        { id: 19, name: 'Snack Chifles Dulce', price: 0.75, stock: 30, category: 'bebida', image: '🌰' }
+        { id: 10, name: 'Bubble Tea', price: 2.00, stock: 30, category: 'bebida', image: '🧋' },
+        { id: 11, name: 'Granizado', price: 1.50, stock: 30, category: 'bebida', image: '🧊' },
+        { id: 12, name: 'Agua', price: 0.75, stock: 30, category: 'bebida', image: '💧' },
+        { id: 13, name: 'Powerade', price: 1.25, stock: 30, category: 'bebida', image: '🥤' },
+        { id: 14, name: 'Leche de Sabores', price: 0.87, stock: 30, category: 'bebida', image: '🥛' },
+        { id: 15, name: 'Ponymalta', price: 1.00, stock: 30, category: 'bebida', image: '🍼' },
+        { id: 16, name: 'Imperial Sabores', price: 1.50, stock: 30, category: 'bebida', image: '🍹' },
+        { id: 17, name: 'Snack de Papas', price: 0.50, stock: 30, category: 'bebida', image: '🥔' },
+        { id: 18, name: 'Snack Chifles Sal', price: 0.50, stock: 30, category: 'bebida', image: '🌽' },
+        { id: 19, name: 'Snack Chifles Dulce', price: 0.50, stock: 30, category: 'bebida', image: '🌰' }
     ]
+};
+
+// ===== MÓDULO DE BACKEND - GESTIÓN DE INVENTARIO =====
+const InventoryManager = {
+    // Validar disponibilidad de stock
+    checkStock: function(itemId, quantity) {
+        const item = app.menu.find(i => i.id === itemId);
+        if (!item) {
+            return { valid: false, message: 'Producto no encontrado', stock: 0 };
+        }
+        if (item.stock === 0) {
+            return { valid: false, message: 'Producto agotado', stock: 0, agotado: true };
+        }
+        if (quantity > item.stock) {
+            return { valid: false, message: `Stock insuficiente. Disponible: ${item.stock}`, stock: item.stock };
+        }
+        return { valid: true, message: 'Stock disponible', stock: item.stock };
+    },
+    
+    // Actualizar stock después de compra
+    deductStock: function(itemId, quantity) {
+        const item = app.menu.find(i => i.id === itemId);
+        if (item) {
+            item.stock -= quantity;
+            if (item.stock < 0) item.stock = 0;
+            return true;
+        }
+        return false;
+    },
+    
+    // Obtener estado actual del stock
+    getStockStatus: function(itemId) {
+        const item = app.menu.find(i => i.id === itemId);
+        return item ? item.stock : 0;
+    }
+};
+
+// ===== MÓDULO DE BACKEND - GESTIÓN DE PAGOS =====
+const PaymentProcessor = {
+    // Validar saldo PayMon (Máximo $10 por usuario)
+    validatePaymonBalance: function(userId, amount) {
+        const user = app.users.find(u => u.id === userId);
+        if (!user) {
+            return { valid: false, message: 'Usuario no encontrado' };
+        }
+        
+        const userBalance = user.paymonBalance || 0;
+        const dailyLimit = user.dailyLimit || 10.00;
+        
+        if (userBalance < amount) {
+            const deficit = (amount - userBalance).toFixed(2);
+            return {
+                valid: false,
+                message: `Saldo PayMon insuficiente. Necesitas $${deficit} más`,
+                currentBalance: userBalance,
+                requiredAmount: amount,
+                suggestion: 'Por favor reduce la cantidad de productos o intenta con otro método de pago'
+            };
+        }
+        
+        if (amount > dailyLimit) {
+            return {
+                valid: false,
+                message: `Límite diario de consumo excedido. Máximo: $${dailyLimit}`,
+                dailyLimit: dailyLimit,
+                attemptedAmount: amount,
+                suggestion: 'Reduce la cantidad de productos'
+            };
+        }
+        
+        return { valid: true, message: 'Saldo suficiente', currentBalance: userBalance };
+    },
+    
+    // Procesar pago y deducir saldo
+    processPayment: function(userId, amount, cartItems) {
+        const user = app.users.find(u => u.id === userId);
+        if (!user) {
+            return { success: false, message: 'Usuario no encontrado', status: 'ERROR' };
+        }
+        
+        // Validar saldo
+        const validation = this.validatePaymonBalance(userId, amount);
+        if (!validation.valid) {
+            return { success: false, ...validation, status: 'INSUFFICIENT_BALANCE' };
+        }
+        
+        // Deducir saldo
+        user.paymonBalance -= amount;
+        
+        // Generar comprobante
+        const transaction = {
+            transactionId: 'TXN' + Math.random().toString(36).substring(2, 10).toUpperCase(),
+            userId: userId,
+            userName: user.names,
+            amount: amount,
+            previousBalance: validation.currentBalance,
+            newBalance: user.paymonBalance,
+            items: cartItems,
+            timestamp: new Date().toISOString(),
+            status: 'COMPLETED'
+        };
+        
+        // Guardar en localStorage
+        const transactions = JSON.parse(localStorage.getItem('zumogoTransactions')) || [];
+        transactions.push(transaction);
+        localStorage.setItem('zumogoTransactions', JSON.stringify(transactions));
+        
+        // Guardar usuarios actualizados
+        localStorage.setItem('zumogoUsers', JSON.stringify(app.users));
+        
+        return { success: true, ...transaction, status: 'COMPLETED' };
+    }
 };
 
 // ===== VALIDACIONES =====
@@ -66,14 +180,12 @@ function validateNames(names) {
 function validateEmail(email) {
     const domain = '@eightacademy.edu.ec';
     const localPart = email.trim();
-    // Validar que sea un email válido
     const emailRegex = /^[^\s@]+@?$/;
     if (!emailRegex.test(localPart)) return null;
     return localPart + domain;
 }
 
 function validatePassword(password) {
-    // Mínimo 8 caracteres, mayuscula, numero y simbolo
     const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     return regex.test(password);
 }
@@ -133,52 +245,52 @@ document.getElementById('signUpBtn')?.addEventListener('click', () => {
     const password = document.getElementById('signInPassword').value;
     const messageDiv = document.getElementById('authMessage');
     
-    // Validar nombre
     const validatedNames = validateNames(names);
     if (!validatedNames) {
         showMessage(messageDiv, 'El nombre debe contener solo letras y tener al menos 3 caracteres', 'error');
         return;
     }
     
-    // Validar email
     const validatedEmail = validateEmail(email);
     if (!validatedEmail) {
         showMessage(messageDiv, 'Por favor ingresa un correo válido (sin @)', 'error');
         return;
     }
     
-    // Validar contraseña
     if (!validatePassword(password)) {
         showMessage(messageDiv, 'La contraseña no cumple todos los requisitos de seguridad', 'error');
         return;
     }
     
-    // Verificar si el usuario ya existe
     if (app.users.some(u => u.email === validatedEmail)) {
         showMessage(messageDiv, 'Este correo ya está registrado', 'error');
         return;
     }
     
-    // Crear nuevo usuario
+    // Asignar saldo aleatorio entre $5 y $10
+    const randomBalance = (Math.random() * 5 + 5).toFixed(2);
+    
     const newUser = {
         id: app.users.length + 1,
         names: validatedNames,
         email: validatedEmail,
         password: password,
-        paymonBalance: 500.00, // Saldo inicial simulado
+        paymonBalance: parseFloat(randomBalance),
+        dailyLimit: 10.00,
         createdAt: new Date().toISOString()
     };
     
     app.users.push(newUser);
     localStorage.setItem('zumogoUsers', JSON.stringify(app.users));
     
-    // Generar JSON para backend (oculto al usuario)
     const registrationData = {
         status: 'ready_to_register',
         user_data: {
             name: validatedNames,
             email: validatedEmail,
-            password_plain: password
+            password_plain: password,
+            paymonBalance: parseFloat(randomBalance),
+            dailyLimit: 10.00
         },
         timestamp: new Date().toISOString()
     };
@@ -186,7 +298,6 @@ document.getElementById('signUpBtn')?.addEventListener('click', () => {
     
     showMessage(messageDiv, '¡Registro exitoso! Tu cuenta ha sido creada. Inicia sesión ahora.', 'success');
     
-    // Limpiar formulario
     document.getElementById('signInNames').value = '';
     document.getElementById('signInEmail').value = '';
     document.getElementById('signInPassword').value = '';
@@ -216,9 +327,8 @@ document.getElementById('loginBtn')?.addEventListener('click', () => {
         return;
     }
     
-    // Login exitoso
     app.currentUser = user;
-    app.paymonBalance = user.paymonBalance || 500.00;
+    app.paymonBalance = user.paymonBalance || 10.00;
     showMessage(messageDiv, `¡Hola ${user.names}!`, 'success');
     
     setTimeout(() => {
@@ -274,17 +384,21 @@ function renderMenu() {
     container.innerHTML = '';
     
     app.menu.forEach(item => {
+        const stockStatus = InventoryManager.getStockStatus(item.id);
+        const isOutOfStock = stockStatus === 0;
+        
         const div = document.createElement('div');
-        div.className = 'menu-item';
+        div.className = 'menu-item' + (isOutOfStock ? ' item-out-of-stock' : '');
         div.innerHTML = `
             <div class="item-image">${item.image}</div>
             <div class="item-name">${item.name}</div>
             <div class="item-price">\$${item.price.toFixed(2)}</div>
-            <div class="item-stock">Stock: ${item.stock}</div>
+            <div class="item-stock">Stock: ${stockStatus}</div>
             <div class="item-quantity-section">
-                <input type="number" id="qty-${item.id}" value="1" min="1" max="${item.stock}" class="qty-input">
-                <button class="btn-add-cart" onclick="addToCart(${item.id})">+</button>
+                <input type="number" id="qty-${item.id}" value="1" min="1" max="${stockStatus}" class="qty-input" ${isOutOfStock ? 'disabled' : ''}>
+                <button class="btn-add-cart" onclick="addToCart(${item.id})" ${isOutOfStock ? 'disabled' : ''}>+</button>
             </div>
+            ${isOutOfStock ? '<div class="badge-agotado">AGOTADO</div>' : ''}
         `;
         container.appendChild(div);
     });
@@ -300,13 +414,19 @@ function addToCart(itemId) {
         return;
     }
     
-    if (quantity <= 0) {
-        showNotification('La cantidad debe ser mayor a 0', 'error');
+    // Validar stock usando módulo de backend
+    const stockValidation = InventoryManager.checkStock(item.id, quantity);
+    if (!stockValidation.valid) {
+        if (stockValidation.agotado) {
+            showNotification('🚫 Producto agotado', 'error');
+        } else {
+            showNotification(`${stockValidation.message}`, 'error');
+        }
         return;
     }
     
-    if (quantity > item.stock) {
-        showNotification(`Stock disponible: ${item.stock}`, 'error');
+    if (quantity <= 0) {
+        showNotification('La cantidad debe ser mayor a 0', 'error');
         return;
     }
     
@@ -454,24 +574,27 @@ function renderPaymentSummary() {
 
 function updatePaymentMethod() {
     const total = getCartTotal();
-    
-    // PayMon
     const paymonDiv = document.getElementById('paymonInfo');
+    
+    // Validar saldo usando módulo de backend
+    const validation = PaymentProcessor.validatePaymonBalance(app.currentUser.id, total);
+    
     paymonDiv.innerHTML = `
         <div class="paymon-account">
             <p><strong>Cuenta:</strong> ${app.currentUser.email}</p>
-            <p><strong>Saldo Disponible:</strong> <span class="paymon-balance">\$${app.paymonBalance.toFixed(2)}</span></p>
+            <p><strong>Límite Diario:</strong> <span class="paymon-limit">\$${app.currentUser.dailyLimit.toFixed(2)}</span></p>
+            <p><strong>Saldo Disponible:</strong> <span class="paymon-balance">\$${app.currentUser.paymonBalance.toFixed(2)}</span></p>
             <p><strong>Monto a Pagar:</strong> <span class="paymon-amount">\$${total.toFixed(2)}</span></p>
             <p id="paymonStatus" class="paymon-status"></p>
+            ${!validation.valid ? `<p id="paymonSuggestion" class="paymon-suggestion">${validation.suggestion}</p>` : ''}
         </div>
     `;
     
-    // Validar saldo
-    if (app.paymonBalance >= total) {
+    if (validation.valid) {
         document.getElementById('paymonStatus').innerHTML = '<span style="color: #22c55e; font-weight: 600;">✓ Saldo suficiente</span>';
         document.getElementById('confirmPaymentBtn').disabled = false;
     } else {
-        document.getElementById('paymonStatus').innerHTML = `<span style="color: #ef4444; font-weight: 600;">✗ Saldo insuficiente. Necesitas $${(total - app.paymonBalance).toFixed(2)} más</span>`;
+        document.getElementById('paymonStatus').innerHTML = `<span style="color: #ef4444; font-weight: 600;">✗ ${validation.message}</span>`;
         document.getElementById('confirmPaymentBtn').disabled = true;
     }
 }
@@ -501,29 +624,48 @@ document.getElementById('confirmPaymentBtn')?.addEventListener('click', () => {
     const total = getCartTotal();
     const method = app.paymentMethod === 'paymon' ? 'PayMon' : 'EightCoins';
     
-    // Validar saldo en PayMon
-    if (app.paymentMethod === 'paymon' && app.paymonBalance < total) {
-        showMessage(messageDiv, `Saldo insuficiente en PayMon. Necesitas $${(total - app.paymonBalance).toFixed(2)} más`, 'error');
-        return;
-    }
-    
-    showMessage(messageDiv, `Procesando pago por ${method}...`, 'success');
-    
-    // Simular procesamiento
-    setTimeout(() => {
-        // Descontar saldo si es PayMon
-        if (app.paymentMethod === 'paymon') {
-            app.paymonBalance -= total;
-            app.currentUser.paymonBalance = app.paymonBalance;
-            localStorage.setItem('zumogoUsers', JSON.stringify(app.users));
+    if (app.paymentMethod === 'paymon') {
+        // Procesar pago con módulo de backend
+        const cartItems = app.cart.map(item => ({
+            id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+            subtotal: item.price * item.quantity
+        }));
+        
+        const paymentResult = PaymentProcessor.processPayment(app.currentUser.id, total, cartItems);
+        
+        if (!paymentResult.success) {
+            showMessage(messageDiv, paymentResult.message, 'error');
+            console.error('Pago rechazado:', paymentResult);
+            return;
         }
         
-        showMessage(messageDiv, `¡Pago de $${total.toFixed(2)} confirmado por ${method}! Dirígete al retiro`, 'success');
+        // Actualizar saldo en pantalla
+        app.paymonBalance = paymentResult.newBalance;
+        app.currentUser.paymonBalance = paymentResult.newBalance;
+        
+        // Log de transacción exitosa
+        console.log('%cTRANSACCIÓN EXITOSA:', 'color: green; font-weight: bold;', JSON.stringify(paymentResult, null, 2));
+        
+        showMessage(messageDiv, `✓ Pago de $${total.toFixed(2)} procesado por ${method}`, 'success');
+    } else {
+        showMessage(messageDiv, `Procesando pago por ${method}...`, 'success');
+    }
+    
+    setTimeout(() => {
+        // Deducir stock después de pago exitoso
+        app.cart.forEach(item => {
+            InventoryManager.deductStock(item.id, item.quantity);
+        });
+        
+        showMessage(messageDiv, `¡Pago confirmado! Dirígete al retiro`, 'success');
         setTimeout(() => {
             goToPickupLayer();
             messageDiv.classList.add('hidden');
         }, 1500);
-    }, 2000);
+    }, 1500);
 });
 
 document.getElementById('cancelPaymentBtn')?.addEventListener('click', () => {
@@ -622,5 +764,7 @@ window.addEventListener('beforeunload', () => {
     localStorage.setItem('zumogoUsers', JSON.stringify(app.users));
 });
 
-console.log('ZumoGo App Initialized');
+console.log('ZumoGo App Initialized - Backend Module Loaded');
 console.log('Test User: mcartagena@eightacademy.edu.ec / Zumo@2024');
+console.log('Inventory Manager:', InventoryManager);
+console.log('Payment Processor:', PaymentProcessor);

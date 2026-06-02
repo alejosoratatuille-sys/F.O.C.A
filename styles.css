@@ -162,6 +162,20 @@ body {
     border-color: var(--primary-green);
 }
 
+.input-hint {
+    display: block;
+    font-size: 12px;
+    color: var(--text-light);
+    margin-top: -10px;
+    margin-bottom: 12px;
+}
+
+.email-field-wrapper {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+}
+
 .email-input {
     flex: 1;
     margin-bottom: 0;
@@ -174,10 +188,20 @@ body {
     background: var(--light-bg);
     border: 2px solid var(--border-color);
     border-radius: 0 8px 8px 0;
-    margin-bottom: 12px;
     color: var(--text-light);
     font-size: 14px;
     border-left: none;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+}
+
+.password-label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    font-size: 14px;
 }
 
 .password-requirements {
@@ -192,6 +216,25 @@ body {
 
 .password-requirements p {
     margin: 4px 0;
+    transition: color 0.3s ease;
+}
+
+.password-suggestion {
+    background: #fef3c7;
+    border-left: 4px solid #f59e0b;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--text-dark);
+}
+
+.password-suggestion code {
+    background: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    margin: 0 4px;
 }
 
 .btn {
@@ -375,12 +418,31 @@ body {
     transition: all 0.3s ease;
     text-align: center;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    position: relative;
 }
 
-.menu-item:hover {
+.menu-item:hover:not(.item-out-of-stock) {
     border-color: var(--primary-pink);
     transform: translateY(-4px);
     box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15);
+}
+
+.menu-item.item-out-of-stock {
+    opacity: 0.5;
+    background: #f3f4f6;
+    cursor: not-allowed;
+}
+
+.badge-agotado {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #ef4444;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
 }
 
 .item-image {
@@ -432,6 +494,11 @@ body {
     border-color: var(--primary-green);
 }
 
+.qty-input:disabled {
+    background: #f3f4f6;
+    cursor: not-allowed;
+}
+
 .btn-add-cart {
     flex: 1;
     padding: 6px 8px;
@@ -452,6 +519,11 @@ body {
 
 .btn-add-cart:active {
     transform: scale(0.95);
+}
+
+.btn-add-cart:disabled {
+    background: #d1d5db;
+    cursor: not-allowed;
 }
 
 .cart-section {
@@ -634,11 +706,53 @@ body {
 }
 
 .method-details {
-    text-align: center;
+    text-align: left;
+}
+
+.method-details h4 {
+    color: var(--text-dark);
+    margin-bottom: 10px;
+    font-size: 14px;
 }
 
 .method-details.hidden {
     display: none;
+}
+
+.paymon-account {
+    background: white;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 3px solid var(--primary-green);
+}
+
+.paymon-account p {
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: var(--text-dark);
+}
+
+.paymon-account strong {
+    color: var(--primary-green);
+}
+
+.paymon-limit, .paymon-balance, .paymon-amount {
+    font-weight: 700;
+}
+
+.paymon-status {
+    margin-top: 8px;
+    font-weight: 600;
+}
+
+.paymon-suggestion {
+    background: #fee2e2;
+    border-left: 3px solid #ef4444;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #991b1b;
+    margin-top: 8px;
 }
 
 .payment-info {
