@@ -22,14 +22,27 @@
                 <!-- SIGN IN -->
                 <div id="signInForm" class="form-container">
                     <h2>Crear Cuenta</h2>
-                    <input type="text" id="signInNames" placeholder="NOMBRES Y APELLIDOS" class="input-field" maxlength="100">
-                    <input type="email" id="signInEmail" placeholder="correo" class="input-field email-input" maxlength="50">
-                    <span class="email-domain">@eightacademy.edu.ec</span>
-                    <input type="password" id="signInPassword" placeholder="Contraseña (mín 12 dígitos)" class="input-field">
-                    <div class="password-requirements">
-                        <p>✓ Mínimo 12 caracteres</p>
-                        <p>✓ Mayúscula, minúscula, número y símbolo</p>
+                    <input type="text" id="signInNames" placeholder="Ej: Juan Carlos Pérez García" class="input-field" maxlength="100">
+                    <span class="input-hint">Se convertirá a mayúsculas automáticamente</span>
+                    
+                    <div class="email-field-wrapper">
+                        <input type="email" id="signInEmail" placeholder="correo" class="input-field email-input" maxlength="50">
+                        <span class="email-domain">@eightacademy.edu.ec</span>
                     </div>
+                    <span class="input-hint">Solo dominio institucional permitido</span>
+                    
+                    <label class="password-label">Crear Contraseña Segura</label>
+                    <input type="password" id="signInPassword" placeholder="Ej: Zumo@2024Pass" class="input-field" maxlength="50">
+                    <div class="password-requirements">
+                        <p id="req-length">📄 Mínimo 8 caracteres</p>
+                        <p id="req-upper">📄 Al menos una mayúscula (A-Z)</p>
+                        <p id="req-number">📄 Al menos un número (0-9)</p>
+                        <p id="req-special">📄 Al menos un carácter especial (@$!%*?&)</p>
+                    </div>
+                    <div class="password-suggestion">
+                        <strong>Sugerencia:</strong> <code>Zumo@2024</code> o <code>Rest@123Seguro</code>
+                    </div>
+                    
                     <button id="signUpBtn" class="btn btn-primary">Registrarse</button>
                     <p class="toggle-form">¿Ya tienes cuenta? <a href="#" id="toLoginLink">Inicia Sesión</a></p>
                 </div>
@@ -37,8 +50,10 @@
                 <!-- LOG IN -->
                 <div id="logInForm" class="form-container hidden">
                     <h2>Inicia Sesión</h2>
-                    <input type="email" id="logInEmail" placeholder="correo" class="input-field email-input" maxlength="50">
-                    <span class="email-domain">@eightacademy.edu.ec</span>
+                    <div class="email-field-wrapper">
+                        <input type="email" id="logInEmail" placeholder="correo" class="input-field email-input" maxlength="50">
+                        <span class="email-domain">@eightacademy.edu.ec</span>
+                    </div>
                     <input type="password" id="logInPassword" placeholder="Contraseña" class="input-field">
                     <button id="loginBtn" class="btn btn-primary">Ingresar</button>
                     <p class="toggle-form">¿No tienes cuenta? <a href="#" id="toSignupLink">Regístrate</a></p>
@@ -66,7 +81,7 @@
                     </div>
                 </div>
 
-                <!-- MENÚ -->
+                <!-- MENÍ -->
                 <div class="menu-section">
                     <h3>Menú Disponible</h3>
                     <div id="menuContainer" class="menu-grid"></div>
@@ -104,8 +119,8 @@
 
                 <div id="paymentDetails" class="payment-details">
                     <div id="paymonDetails" class="method-details">
-                        <p>Procesando pago por PayMon...</p>
-                        <p class="payment-info">El monto se cobrará de tu cuenta PayMon</p>
+                        <h4>Información de PayMon</h4>
+                        <div id="paymonInfo" class="paymon-info"></div>
                     </div>
                     <div id="eightcoinsDetails" class="method-details hidden">
                         <p>Procesando pago con EightCoins...</p>

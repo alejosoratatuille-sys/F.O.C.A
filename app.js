@@ -2,7 +2,6 @@
 // Sistema de pedidos, compra y retiro para Zumo&Resto
 
 // ===== LIBRERÍA QR (QRCode.js) =====
-// Incluida dinámicamente desde CDN
 if (!window.QRCode) {
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
@@ -16,6 +15,7 @@ const app = {
     cart: [],
     paymentMethod: 'paymon',
     currentOrderId: null,
+    paymonBalance: 500.00, // Saldo simulado de PayMon
     
     // Base de datos de usuarios
     users: JSON.parse(localStorage.getItem('zumogoUsers')) || [
@@ -23,7 +23,8 @@ const app = {
             id: 1,
             names: 'MARÍA EMILIA CARTAGENA LINCANGO',
             email: 'mcartagena@eightacademy.edu.ec',
-            password: '1234567890', // Usuario de prueba
+            password: 'Zumo@2024', // Contraseña segura de ejemplo
+            paymonBalance: 500.00,
             createdAt: new Date().toISOString()
         }
     ],
@@ -57,7 +58,6 @@ const app = {
 
 // ===== VALIDACIONES =====
 function validateNames(names) {
-    // Solo letras y espacios, convertir a mayúsculas
     const cleanNames = names.trim().toUpperCase();
     const regex = /^[A-ZÁÉÍÓÚÑ\s]{3,}$/;
     return regex.test(cleanNames) ? cleanNames : null;
@@ -66,68 +66,47 @@ function validateNames(names) {
 function validateEmail(email) {
     const domain = '@eightacademy.edu.ec';
     const localPart = email.trim();
-    return localPart.length > 0 ? localPart + domain : null;
+    // Validar que sea un email válido
+    const emailRegex = /^[^\s@]+@?$/;
+    if (!emailRegex.test(localPart)) return null;
+    return localPart + domain;
 }
 
 function validatePassword(password) {
-    // Mínimo 12 dígitos, mayúscula, minúscula, número y símbolo
-    const regex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
+    // Mínimo 8 caracteres, mayuscula, numero y simbolo
+    const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     return regex.test(password);
 }
 
-// ===== GENERADOR DE ÓRDENES Y QR =====
-function generateOrderData() {
-    const orderId = 'ZGO' + Math.random().toString(36).substring(2, 8).toUpperCase();
-    const timestamp = new Date().toISOString();
-    const recreation = app.selectedRecreation === 'basica' ? 'Básica (9:50-10:30)' : 'Bachillerato (10:30-11:00)';
-    
-    const orderData = {
-        id: orderId,
-        user: app.currentUser.names,
-        email: app.currentUser.email,
-        recreation: recreation,
-        timestamp: timestamp,
-        items: app.cart.map(item => `${item.name}(x${item.quantity})`).join(', '),
-        total: app.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+function getPasswordValidationStatus(password) {
+    return {
+        length: password.length >= 8,
+        uppercase: /[A-Z]/.test(password),
+        number: /\d/.test(password),
+        special: /[@$!%*?&]/.test(password)
     };
-    
-    // Guardar orden en localStorage
-    const orders = JSON.parse(localStorage.getItem('zumogoOrders')) || [];
-    orders.push(orderData);
-    localStorage.setItem('zumogoOrders', JSON.stringify(orders));
-    
-    app.currentOrderId = orderId;
-    return orderId;
 }
 
-function generateQRCode(orderId) {
-    // Limpiar QR anterior
-    const qrContainer = document.getElementById('qrCode');
-    qrContainer.innerHTML = '';
+// ===== VALIDACIÓN EN TIEMPO REAL DE CONTRASEÑA =====
+document.getElementById('signInPassword')?.addEventListener('input', (e) => {
+    const password = e.target.value;
+    const status = getPasswordValidationStatus(password);
     
-    // Datos del QR (incluye información completa)
-    const qrData = `Pedido: ${orderId}
-Estudiante: ${app.currentUser.names}
-Correo: ${app.currentUser.email}
-Recreo: ${app.selectedRecreation === 'basica' ? 'Básica' : 'Bachillerato'}
-Total: $${app.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}`;
+    document.getElementById('req-length').style.color = status.length ? '#22c55e' : '#6b7280';
+    document.getElementById('req-upper').style.color = status.uppercase ? '#22c55e' : '#6b7280';
+    document.getElementById('req-number').style.color = status.number ? '#22c55e' : '#6b7280';
+    document.getElementById('req-special').style.color = status.special ? '#22c55e' : '#6b7280';
     
-    // Generar QR con QRCode.js
-    try {
-        new QRCode(qrContainer, {
-            text: qrData,
-            width: 200,
-            height: 200,
-            colorDark: '#22c55e',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.H
-        });
-    } catch (error) {
-        console.error('Error generando QR:', error);
-        // Fallback si hay error
-        qrContainer.innerHTML = `<div style="font-size: 48px;">📱</div><div style="font-size: 14px; margin-top: 10px; font-weight: 700;">${orderId}</div>`;
-    }
-}
+    document.getElementById('req-length').textContent = status.length ? '✓ Mínimo 8 caracteres' : '📄 Mínimo 8 caracteres';
+    document.getElementById('req-upper').textContent = status.uppercase ? '✓ Al menos una mayúscula (A-Z)' : '📄 Al menos una mayúscula (A-Z)';
+    document.getElementById('req-number').textContent = status.number ? '✓ Al menos un número (0-9)' : '📄 Al menos un número (0-9)';
+    document.getElementById('req-special').textContent = status.special ? '✓ Al menos un carácter especial (@$!%*?&)' : '📄 Al menos un carácter especial (@$!%*?&)';
+});
+
+// ===== CONVERSIÓN AUTOMÁTICA A MAYÚSCULAS =====
+document.getElementById('signInNames')?.addEventListener('input', (e) => {
+    e.target.value = e.target.value.toUpperCase();
+});
 
 // ===== AUTENTICACIÓN =====
 function toggleAuthForms() {
@@ -149,28 +128,28 @@ document.getElementById('toSignupLink')?.addEventListener('click', (e) => {
 
 // SIGN UP
 document.getElementById('signUpBtn')?.addEventListener('click', () => {
-    const names = document.getElementById('signInNames').value;
-    const email = document.getElementById('signInEmail').value;
+    const names = document.getElementById('signInNames').value.trim();
+    const email = document.getElementById('signInEmail').value.trim();
     const password = document.getElementById('signInPassword').value;
     const messageDiv = document.getElementById('authMessage');
     
     // Validar nombre
     const validatedNames = validateNames(names);
     if (!validatedNames) {
-        showMessage(messageDiv, 'El nombre solo debe contener letras', 'error');
+        showMessage(messageDiv, 'El nombre debe contener solo letras y tener al menos 3 caracteres', 'error');
         return;
     }
     
     // Validar email
     const validatedEmail = validateEmail(email);
     if (!validatedEmail) {
-        showMessage(messageDiv, 'Email inválido', 'error');
+        showMessage(messageDiv, 'Por favor ingresa un correo válido (sin @)', 'error');
         return;
     }
     
     // Validar contraseña
     if (!validatePassword(password)) {
-        showMessage(messageDiv, 'Contraseña no cumple los requisitos de seguridad', 'error');
+        showMessage(messageDiv, 'La contraseña no cumple todos los requisitos de seguridad', 'error');
         return;
     }
     
@@ -186,28 +165,42 @@ document.getElementById('signUpBtn')?.addEventListener('click', () => {
         names: validatedNames,
         email: validatedEmail,
         password: password,
+        paymonBalance: 500.00, // Saldo inicial simulado
         createdAt: new Date().toISOString()
     };
     
     app.users.push(newUser);
     localStorage.setItem('zumogoUsers', JSON.stringify(app.users));
     
-    showMessage(messageDiv, '¡Registro exitoso! Inicia sesión', 'success');
+    // Generar JSON para backend (oculto al usuario)
+    const registrationData = {
+        status: 'ready_to_register',
+        user_data: {
+            name: validatedNames,
+            email: validatedEmail,
+            password_plain: password
+        },
+        timestamp: new Date().toISOString()
+    };
+    console.log('%cREGISTRO COMPLETADO - Backend:', 'color: green; font-weight: bold;', JSON.stringify(registrationData, null, 2));
+    
+    showMessage(messageDiv, '¡Registro exitoso! Tu cuenta ha sido creada. Inicia sesión ahora.', 'success');
     
     // Limpiar formulario
     document.getElementById('signInNames').value = '';
     document.getElementById('signInEmail').value = '';
     document.getElementById('signInPassword').value = '';
+    messageDiv.classList.remove('hidden');
     
     setTimeout(() => {
         toggleAuthForms();
         messageDiv.classList.add('hidden');
-    }, 2000);
+    }, 3000);
 });
 
 // LOGIN
 document.getElementById('loginBtn')?.addEventListener('click', () => {
-    const email = document.getElementById('logInEmail').value;
+    const email = document.getElementById('logInEmail').value.trim();
     const password = document.getElementById('logInPassword').value;
     const messageDiv = document.getElementById('authMessage');
     
@@ -225,6 +218,7 @@ document.getElementById('loginBtn')?.addEventListener('click', () => {
     
     // Login exitoso
     app.currentUser = user;
+    app.paymonBalance = user.paymonBalance || 500.00;
     showMessage(messageDiv, `¡Hola ${user.names}!`, 'success');
     
     setTimeout(() => {
@@ -264,6 +258,7 @@ function goToPaymentLayer() {
     hideAllLayers();
     document.getElementById('paymentLayer').classList.remove('hidden');
     renderPaymentSummary();
+    updatePaymentMethod();
 }
 
 function goToPickupLayer() {
@@ -300,7 +295,6 @@ function addToCart(itemId) {
     const quantity = parseInt(qtyInput.value) || 1;
     const item = app.menu.find(i => i.id === itemId);
     
-    // Validación mejorada
     if (!item) {
         showNotification('Producto no encontrado', 'error');
         return;
@@ -316,7 +310,6 @@ function addToCart(itemId) {
         return;
     }
     
-    // Agregar al carrito
     const existingCartItem = app.cart.find(c => c.id === itemId);
     
     if (existingCartItem) {
@@ -330,7 +323,6 @@ function addToCart(itemId) {
         app.cart.push({ ...item, quantity });
     }
     
-    // Resetear input y mostrar confirmación
     qtyInput.value = '1';
     updateCart();
     showNotification(`${item.name} agregado al carrito ✓`, 'success');
@@ -377,7 +369,6 @@ function updateCart() {
     proceedBtn.disabled = app.cart.length === 0;
 }
 
-// Notificación rápida
 function showNotification(message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
@@ -426,7 +417,6 @@ document.getElementById('recreoBachillerato')?.addEventListener('click', functio
     this.classList.add('active');
 });
 
-// Proceder a pago
 document.getElementById('proceedPaymentBtn')?.addEventListener('click', () => {
     if (app.cart.length > 0) {
         goToPaymentLayer();
@@ -434,6 +424,10 @@ document.getElementById('proceedPaymentBtn')?.addEventListener('click', () => {
 });
 
 // ===== CAPA DE PAGO =====
+function getCartTotal() {
+    return app.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+}
+
 function renderPaymentSummary() {
     const summaryDiv = document.getElementById('paymentSummary');
     summaryDiv.innerHTML = '';
@@ -458,6 +452,30 @@ function renderPaymentSummary() {
     summaryDiv.appendChild(totalDiv);
 }
 
+function updatePaymentMethod() {
+    const total = getCartTotal();
+    
+    // PayMon
+    const paymonDiv = document.getElementById('paymonInfo');
+    paymonDiv.innerHTML = `
+        <div class="paymon-account">
+            <p><strong>Cuenta:</strong> ${app.currentUser.email}</p>
+            <p><strong>Saldo Disponible:</strong> <span class="paymon-balance">\$${app.paymonBalance.toFixed(2)}</span></p>
+            <p><strong>Monto a Pagar:</strong> <span class="paymon-amount">\$${total.toFixed(2)}</span></p>
+            <p id="paymonStatus" class="paymon-status"></p>
+        </div>
+    `;
+    
+    // Validar saldo
+    if (app.paymonBalance >= total) {
+        document.getElementById('paymonStatus').innerHTML = '<span style="color: #22c55e; font-weight: 600;">✓ Saldo suficiente</span>';
+        document.getElementById('confirmPaymentBtn').disabled = false;
+    } else {
+        document.getElementById('paymonStatus').innerHTML = `<span style="color: #ef4444; font-weight: 600;">✗ Saldo insuficiente. Necesitas $${(total - app.paymonBalance).toFixed(2)} más</span>`;
+        document.getElementById('confirmPaymentBtn').disabled = true;
+    }
+}
+
 // Seleccionar método de pago
 document.getElementById('paymentPayMon')?.addEventListener('click', function() {
     app.paymentMethod = 'paymon';
@@ -465,6 +483,7 @@ document.getElementById('paymentPayMon')?.addEventListener('click', function() {
     this.classList.add('active');
     document.getElementById('paymonDetails').classList.remove('hidden');
     document.getElementById('eightcoinsDetails').classList.add('hidden');
+    updatePaymentMethod();
 });
 
 document.getElementById('paymentEightCoins')?.addEventListener('click', function() {
@@ -473,48 +492,109 @@ document.getElementById('paymentEightCoins')?.addEventListener('click', function
     this.classList.add('active');
     document.getElementById('eightcoinsDetails').classList.remove('hidden');
     document.getElementById('paymonDetails').classList.add('hidden');
+    document.getElementById('confirmPaymentBtn').disabled = false;
 });
 
 // Confirmar pago
 document.getElementById('confirmPaymentBtn')?.addEventListener('click', () => {
     const messageDiv = document.getElementById('paymentMessage');
+    const total = getCartTotal();
     const method = app.paymentMethod === 'paymon' ? 'PayMon' : 'EightCoins';
+    
+    // Validar saldo en PayMon
+    if (app.paymentMethod === 'paymon' && app.paymonBalance < total) {
+        showMessage(messageDiv, `Saldo insuficiente en PayMon. Necesitas $${(total - app.paymonBalance).toFixed(2)} más`, 'error');
+        return;
+    }
     
     showMessage(messageDiv, `Procesando pago por ${method}...`, 'success');
     
+    // Simular procesamiento
     setTimeout(() => {
-        showMessage(messageDiv, '¡Pago confirmado! Dirígete al retiro', 'success');
+        // Descontar saldo si es PayMon
+        if (app.paymentMethod === 'paymon') {
+            app.paymonBalance -= total;
+            app.currentUser.paymonBalance = app.paymonBalance;
+            localStorage.setItem('zumogoUsers', JSON.stringify(app.users));
+        }
+        
+        showMessage(messageDiv, `¡Pago de $${total.toFixed(2)} confirmado por ${method}! Dirígete al retiro`, 'success');
         setTimeout(() => {
             goToPickupLayer();
             messageDiv.classList.add('hidden');
         }, 1500);
-    }, 1500);
+    }, 2000);
 });
 
-// Cancelar pago
 document.getElementById('cancelPaymentBtn')?.addEventListener('click', () => {
     goToOrderLayer();
 });
 
+// ===== GENERADOR DE ÓRDENES Y QR =====
+function generateOrderData() {
+    const orderId = 'ZGO' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    const timestamp = new Date().toISOString();
+    const recreation = app.selectedRecreation === 'basica' ? 'Básica (9:50-10:30)' : 'Bachillerato (10:30-11:00)';
+    
+    const orderData = {
+        id: orderId,
+        user: app.currentUser.names,
+        email: app.currentUser.email,
+        recreation: recreation,
+        timestamp: timestamp,
+        items: app.cart.map(item => `${item.name}(x${item.quantity})`).join(', '),
+        total: app.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+        paymentMethod: app.paymentMethod
+    };
+    
+    const orders = JSON.parse(localStorage.getItem('zumogoOrders')) || [];
+    orders.push(orderData);
+    localStorage.setItem('zumogoOrders', JSON.stringify(orders));
+    
+    app.currentOrderId = orderId;
+    return orderId;
+}
+
+function generateQRCode(orderId) {
+    const qrContainer = document.getElementById('qrCode');
+    qrContainer.innerHTML = '';
+    
+    const qrData = `Pedido: ${orderId}
+Estudiante: ${app.currentUser.names}
+Correo: ${app.currentUser.email}
+Recreo: ${app.selectedRecreation === 'basica' ? 'Básica' : 'Bachillerato'}
+Total: $${app.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}`;
+    
+    try {
+        new QRCode(qrContainer, {
+            text: qrData,
+            width: 200,
+            height: 200,
+            colorDark: '#22c55e',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    } catch (error) {
+        console.error('Error generando QR:', error);
+        qrContainer.innerHTML = `<div style="font-size: 48px;">📱</div><div style="font-size: 14px; margin-top: 10px; font-weight: 700;">${orderId}</div>`;
+    }
+}
+
 // ===== CAPA DE RETIRO =====
 function displayPickupInfo(orderId) {
-    // Mostrar ID de orden
     document.getElementById('pickupCode').textContent = orderId;
     
-    // Generar QR
     setTimeout(() => {
         generateQRCode(orderId);
     }, 100);
 }
 
-// Hacer otro pedido
 document.getElementById('newOrderBtn')?.addEventListener('click', () => {
     app.cart = [];
     app.currentOrderId = null;
     goToOrderLayer();
 });
 
-// Ir al inicio (logout)
 document.getElementById('homeBtn')?.addEventListener('click', () => {
     app.currentUser = null;
     app.cart = [];
@@ -538,10 +618,9 @@ window.addEventListener('load', () => {
     }, 3000);
 });
 
-// Guardar usuarios en localStorage
 window.addEventListener('beforeunload', () => {
     localStorage.setItem('zumogoUsers', JSON.stringify(app.users));
 });
 
 console.log('ZumoGo App Initialized');
-console.log('Test User: mcartagena@eightacademy.edu.ec / 1234567890');
+console.log('Test User: mcartagena@eightacademy.edu.ec / Zumo@2024');
