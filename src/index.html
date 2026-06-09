@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ZumoGo - Pide, paga y retira tu almuerzo sin perder el recreo">
+    <meta name="theme-color" content="#FF6B35">
+    <title>ZumoGo 🥪⚡ - Escuela Bar App</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="../manifest.json">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23FF6B35' width='192' height='192'/><text x='50%' y='50%' font-size='120' font-weight='bold' fill='%2300FF00' text-anchor='middle' dominant-baseline='middle'>Z</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%23FF6B35' width='180' height='180'/><text x='50%' y='50%' font-size='100' font-weight='bold' fill='%2300FF00' text-anchor='middle' dominant-baseline='middle'>Z</text></svg>">
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <button class="menu-toggle" id="menu-btn" onclick="toggleMenu()">☰</button>
+                <h1 class="app-title">🥪 ZumoGo</h1>
+                <div class="header-right">
+                    <span class="coins-badge" id="coins-display">🪙 150</span>
+                    <button class="cart-badge" id="cart-btn" onclick="switchScreen('cart')">
+                        🛒 <span id="cart-count">0</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar Menu -->
+        <div class="sidebar-overlay" id="menu-overlay" onclick="toggleMenu(false)"></div>
+        <aside class="sidebar-menu" id="sidebar-menu">
+            <div class="sidebar-header">
+                <h2>ZumoGo</h2>
+                <button class="close-menu" onclick="toggleMenu(false)">✕</button>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item" onclick="switchScreen('menu'); toggleMenu(false)">🛒 Menú</button>
+                <button class="nav-item" onclick="switchScreen('cart'); toggleMenu(false)">🛍️ Carrito</button>
+                <button class="nav-item" onclick="switchScreen('history'); toggleMenu(false)">📋 Historial</button>
+                <button class="nav-item" onclick="switchScreen('profile'); toggleMenu(false)">👤 Perfil</button>
+                <hr>
+                <button class="nav-item danger" onclick="clearAllData()">🗑️ Limpiar datos</button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- MENU SCREEN -->
+            <section class="screen active" data-screen="menu">
+                <div class="screen-header">
+                    <h2>Menú del día</h2>
+                    <p id="today-date" class="date-info"></p>
+                </div>
+
+                <!-- Category Filters -->
+                <div class="category-filters">
+                    <button class="filter-btn active" onclick="filterByCategory('all')">Todos</button>
+                    <button class="filter-btn" onclick="filterByCategory('combo')">Combos 🥪</button>
+                    <button class="filter-btn" onclick="filterByCategory('vegetarian')">Vegetariano 🥗</button>
+                    <button class="filter-btn" onclick="filterByCategory('beverage')">Bebidas 🧃</button>
+                </div>
+
+                <!-- Menu Items -->
+                <div class="menu-grid" id="menu-items">
+                    <!-- Generado dinámicamente -->
+                </div>
+            </section>
+
+            <!-- CART SCREEN -->
+            <section class="screen" data-screen="cart">
+                <div class="screen-header">
+                    <h2>Tu carrito</h2>
+                </div>
+
+                <div class="cart-items" id="cart-items">
+                    <p class="empty-state">Tu carrito está vacío</p>
+                </div>
+
+                <div class="cart-summary" id="cart-summary" style="display: none;">
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span id="subtotal">$0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Impuesto (8%):</span>
+                        <span id="tax">$0</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total:</span>
+                        <span id="total">$0</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-block" id="checkout-btn" onclick="switchScreen('payment')" style="display: none;">
+                    Ir a pagar →
+                </button>
+            </section>
+
+            <!-- PAYMENT SCREEN -->
+            <section class="screen" data-screen="payment">
+                <div class="screen-header">
+                    <h2>Seleccionar pago</h2>
+                </div>
+
+                <div class="payment-methods">
+                    <div class="payment-option">
+                        <input type="radio" name="payment" value="coins" id="payment-coins" checked>
+                        <label for="payment-coins" class="payment-label">
+                            <span class="payment-title">🪙 Eight Coins</span>
+                            <span class="payment-desc" id="coins-available">Disponibles: 150</span>
+                        </label>
+                    </div>
+
+                    <div class="payment-option">
+                        <input type="radio" name="payment" value="paymon" id="payment-paymon">
+                        <label for="payment-paymon" class="payment-label">
+                            <span class="payment-title">💳 PayMon</span>
+                            <span class="payment-desc">Simulado - No procesa dinero real</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Pickup Time Selection -->
+                <div class="pickup-time-section">
+                    <h3>Hora de retiro</h3>
+                    <div class="time-grid" id="pickup-times">
+                        <!-- Generado dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- PayMon Balance Display -->
+                <div class="paymon-balance-section">
+                    <div class="balance-card">
+                        <div class="balance-header">
+                            <h4>💳 Saldo PayMon</h4>
+                        </div>
+                        <div class="balance-amount">
+                            <span id="paymon-balance">$0</span>
+                        </div>
+                        <div class="balance-status">
+                            <small>Estado: <strong id="balance-status">Cargado</strong></small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="switchScreen('cart')">← Atrás</button>
+                    <button class="btn btn-primary" onclick="processPayment()">Confirmar pago</button>
+                </div>
+            </section>
+
+            <!-- CONFIRMATION SCREEN -->
+            <section class="screen" data-screen="confirmation">
+                <div class="confirmation-content">
+                    <div class="success-icon">✅</div>
+                    <h2>¡Pedido confirmado!</h2>
+                    
+                    <div class="order-details">
+                        <div class="detail-row">
+                            <span class="label">Código:</span>
+                            <span class="value" id="order-code">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Hora de retiro:</span>
+                            <span class="value" id="order-time">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Monto:</span>
+                            <span class="value" id="order-amount">-</span>
+                        </div>
+                    </div>
+
+                    <!-- QR Code -->
+                    <div class="qr-section">
+                        <p class="qr-label">Muestra este código en la fila express:</p>
+                        <div class="qr-container">
+                            <img id="qr-code" src="" alt="QR Code" class="qr-code">
+                        </div>
+                        <button class="btn btn-small" onclick="copyQRCode()">📋 Copiar código</button>
+                    </div>
+
+                    <!-- Simulated PayMon Balance -->
+                    <div class="order-paymon-balance">
+                        <div class="balance-card">
+                            <div class="balance-header">
+                                <h4>💳 Saldo PayMon Actualizado</h4>
+                            </div>
+                            <div class="balance-amount">
+                                <span id="order-paymon-balance">$0</span>
+                            </div>
+                            <div class="balance-details">
+                                <small id="balance-details">-</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary btn-block" onclick="makeNewOrder()">
+                        🛒 Hacer otro pedido
+                    </button>
+                </div>
+            </section>
+
+            <!-- ORDER HISTORY SCREEN -->
+            <section class="screen" data-screen="history">
+                <div class="screen-header">
+                    <h2>Historial de pedidos</h2>
+                </div>
+
+                <div class="history-list" id="history-items">
+                    <p class="empty-state">Sin pedidos anteriores</p>
+                </div>
+            </section>
+
+            <!-- PROFILE SCREEN -->
+            <section class="screen" data-screen="profile">
+                <div class="screen-header">
+                    <h2>Mi perfil</h2>
+                </div>
+
+                <div class="profile-card">
+                    <div class="profile-info" id="profile-info">
+                        <!-- Generado dinámicamente -->
+                    </div>
+                </div>
+
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Total de pedidos:</span>
+                        <span class="stat-value" id="total-orders">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Saldo disponible:</span>
+                        <span class="stat-value" id="available-balance">0 🪙</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/data.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/app.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('../sw.js').catch(err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
